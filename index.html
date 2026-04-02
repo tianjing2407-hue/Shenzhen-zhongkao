@@ -1,0 +1,781 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>深圳中考模拟器</title>
+<style>
+*{margin:0;padding:0;box-sizing:border-box}
+body{background:#1a1a2e;color:#e0e0e0;font-family:'Courier New','Microsoft YaHei',monospace;overflow:hidden;height:100vh;display:flex;justify-content:center;align-items:center}
+#GC{width:820px;height:620px;background:#16213e;position:relative;overflow:hidden;border:3px solid #e0e0e0;box-shadow:inset -2px -2px 0 #555,inset 2px 2px 0 #fff,4px 4px 0 rgba(0,0,0,.3)}
+.btn{background:#16213e;color:#e0e0e0;border:2px solid #e0e0e0;padding:8px 16px;font-family:inherit;font-size:14px;cursor:pointer;box-shadow:3px 3px 0 #000;transition:all .1s;text-align:center}
+.btn:hover{background:#0f3460;transform:translate(1px,1px);box-shadow:2px 2px 0 #000}
+.btn:active{transform:translate(3px,3px);box-shadow:0 0 0 #000}
+.scr{width:100%;height:100%;position:absolute;top:0;left:0;display:none;flex-direction:column;background:#16213e;overflow-y:auto}
+.scr.on{display:flex}
+#S0{justify-content:center;align-items:center;text-align:center;background:linear-gradient(180deg,#0a0a23,#16213e,#1a1a2e)}
+#S0 h1{font-size:36px;color:#e94560;text-shadow:3px 3px 0 #000,-1px -1px 0 #ff6b6b;margin-bottom:8px;letter-spacing:4px}
+.school-icon{font-size:52px;margin-bottom:24px;animation:fl 2s ease-in-out infinite}
+@keyframes fl{0%,100%{transform:translateY(0)}50%{transform:translateY(-10px)}}
+.stars-bg{position:absolute;width:100%;height:100%;pointer-events:none}
+.star{position:absolute;background:#fff;width:2px;height:2px;animation:tw 2s infinite}
+@keyframes tw{0%,100%{opacity:.3}50%{opacity:1}}
+#S1{justify-content:center;align-items:center;text-align:center;padding:24px}
+.roll-anim{font-size:64px;animation:shake .5s ease-in-out}
+@keyframes shake{0%,100%{transform:rotate(0)}25%{transform:rotate(-15deg)}75%{transform:rotate(15deg)}}
+.rank-badge{font-size:22px;padding:8px 24px;margin:12px 0;border:3px solid;display:inline-block}
+.rank-badge.eu{color:#ffd700;border-color:#ffd700;background:rgba(255,215,0,.1)}
+.rank-badge.high{color:#4ecdc4;border-color:#4ecdc4;background:rgba(78,205,196,.1)}
+.rank-badge.mid{color:#ccc;border-color:#888;background:rgba(200,200,200,.05)}
+.rank-badge.low{color:#e94560;border-color:#e94560;background:rgba(233,69,96,.1)}
+.rank-badge.fei{color:#ff6b6b;border-color:#ff6b6b;background:rgba(255,107,107,.15);animation:shake .5s ease-in-out infinite}
+.intro-comment{font-size:13px;color:#aaa;margin:8px 0 16px;max-width:420px;line-height:1.7;font-style:italic}
+#S2{padding:0}
+.ghdr{background:#0a0a23;padding:10px 16px;border-bottom:3px solid #333;font-size:13px}
+.ghdr-top{display:flex;justify-content:space-between;align-items:center;margin-bottom:8px}
+.ghdr .month{color:#ffd700;font-size:16px}
+.ghdr .countdown{color:#e94560;font-size:12px}
+.ghdr .money{color:#4ecdc4;font-size:14px}
+.rank-bar{background:#0a0a23;border:2px solid #555;height:22px;position:relative;border-radius:2px}
+.rank-fill{height:100%;background:linear-gradient(90deg,#e94560,#ffd700,#4ecdc4);transition:width .6s ease;border-radius:1px}
+.rank-text{position:absolute;right:8px;top:2px;font-size:11px;color:#fff;text-shadow:1px 1px 0 #000}
+.rank-label{font-size:10px;color:#888;margin-top:3px;display:flex;justify-content:space-between}
+.gcont{flex:1;padding:12px 16px;overflow-y:auto;display:flex;flex-direction:column}
+.mt{text-align:center;font-size:17px;color:#e94560;margin-bottom:3px;text-shadow:2px 2px 0 #000}
+.ms{text-align:center;font-size:12px;color:#888;margin-bottom:10px}
+.flavor{font-size:12px;color:#888;font-style:italic;margin:4px 0 8px;text-align:center;min-height:16px}
+.agrid{display:grid;grid-template-columns:1fr 1fr;gap:6px;margin-bottom:6px}
+.acard{background:#0a0a23;border:2px solid #444;padding:9px;cursor:pointer;font-size:12px;transition:all .12s}
+.acard:hover{border-color:#4ecdc4;background:#0a1a33}
+.acard.sel{border-color:#e94560;background:#2a0a23}
+.acard.dis{opacity:.35;cursor:not-allowed}
+.acard .an{font-size:14px;color:#4ecdc4;margin-bottom:3px}
+.acard .ad{color:#999;font-size:11px}
+.eov{position:absolute;top:0;left:0;width:100%;height:100%;background:rgba(0,0,0,.78);display:flex;justify-content:center;align-items:center;z-index:100}
+.ebox{background:#16213e;border:3px solid #e94560;padding:18px;max-width:520px;width:92%;box-shadow:6px 6px 0 #000}
+.ebox .et{font-size:16px;color:#ffd700;margin-bottom:8px}
+.ebox .ed{font-size:13px;color:#ccc;margin-bottom:14px;line-height:1.7}
+.ebox .eo{display:flex;flex-direction:column;gap:6px}
+.ebox .eopt{background:#0a0a23;border:2px solid #555;padding:8px 12px;cursor:pointer;font-size:13px;transition:all .12s;text-align:left}
+.ebox .eopt:hover{border-color:#4ecdc4;background:#0a1a33}
+.ebox .eopt .ol{color:#4ecdc4}
+.ebox .eopt .oe{color:#777;font-size:11px;margin-top:2px}
+.rl{display:flex;align-items:center;margin:4px 0;font-size:13px;opacity:0;animation:fsi .4s forwards}
+.rl .ri{margin-right:8px;font-size:16px}
+@keyframes fsi{from{opacity:0;transform:translateX(-15px)}to{opacity:1;transform:translateX(0)}}
+.vgrid{display:grid;grid-template-columns:1fr 1fr;gap:6px;margin:8px 0}
+.vc{background:#0a0a23;border:2px solid #444;padding:8px;cursor:pointer;font-size:13px}
+.vc:hover{border-color:#ffd700}.vc.sel{border-color:#e94560;background:#2a0a23}
+.vc .vn{color:#ffd700;font-size:13px}.vc .vl{color:#888;font-size:11px}
+#S3{justify-content:center;align-items:center;text-align:center;background:linear-gradient(180deg,#0a0a23,#16213e);padding:20px}
+.eemoji{font-size:64px;margin-bottom:12px}
+.etitle{font-size:28px;color:#ffd700;margin-bottom:8px;text-shadow:2px 2px 0 #000}
+.equote{font-size:14px;color:#ccc;margin-bottom:18px;max-width:440px;line-height:1.8}
+.escbox{background:#0a0a23;border:2px solid #555;padding:14px 20px;margin-bottom:14px;text-align:left;font-size:13px;min-width:340px}
+.escbox .esr{display:flex;justify-content:space-between;margin:4px 0}
+.escbox .est{border-top:2px solid #555;margin-top:6px;padding-top:6px;font-size:16px;color:#ffd700}
+.eadmit{font-size:18px;color:#e94560;margin-bottom:14px;text-shadow:2px 2px 0 #000}
+.cbar{padding:8px 16px;background:#0a0a23;border-top:2px solid #333;display:flex;justify-content:center;gap:10px}
+.sel-hint{text-align:center;font-size:11px;color:#e94560;margin-bottom:6px}
+.music-btn{position:absolute;top:8px;right:8px;background:rgba(0,0,0,.4);border:1px solid #555;color:#888;font-size:18px;width:32px;height:32px;cursor:pointer;z-index:200;border-radius:3px;display:flex;align-items:center;justify-content:center;transition:all .2s}
+.music-btn:hover{color:#ffd700;border-color:#ffd700}
+::-webkit-scrollbar{width:5px}::-webkit-scrollbar-track{background:#0a0a23}::-webkit-scrollbar-thumb{background:#555}
+</style>
+</head>
+<body>
+<div id="GC">
+<button class="music-btn" id="music-btn" onclick="window._g.toggleMusic()" title="音乐开关">🔇</button>
+<div id="S0" class="scr on">
+<div class="stars-bg" id="stars"></div>
+<div class="school-icon">🏫</div>
+<h1>深圳中考模拟器</h1>
+<div style="font-size:14px;color:#888;margin-bottom:32px">Shenzhen Zhongkao Simulator · 2026</div>
+<button class="btn" style="font-size:18px;padding:12px 36px" onclick="window._g.rollIntro()">▶ 开始游戏</button>
+<div style="margin-top:14px;font-size:11px;color:#555">初三(6)班 | 解压专用 | 笑着笑着就考完了</div>
+</div>
+<div id="S1" class="scr">
+<div style="font-size:13px;color:#666;margin-bottom:6px">—— 初二下学期结束了，初三的号角即将吹响 ——</div>
+<div style="font-size:12px;color:#555;margin-bottom:10px">你是初三（6）班的学生，全校11个班共520人</div>
+<div id="intro-icon" class="roll-anim" style="font-size:52px;margin:8px 0"></div>
+<div id="intro-rank-badge" class="rank-badge mid"></div>
+<div id="intro-family" style="font-size:14px;color:#aaa;margin:8px 0"></div>
+<div id="intro-comment" class="intro-comment"></div>
+<button class="btn" style="font-size:15px;padding:10px 28px" onclick="window._g.startGame()">📖 开始初三生活</button>
+<button class="btn" style="font-size:12px;padding:5px 14px;margin-top:8px" onclick="window._g.rollIntro()">🎲 不服？再摇一次</button>
+</div>
+<div id="S2" class="scr" style="padding:0;flex-direction:column">
+<div class="ghdr">
+  <div class="ghdr-top">
+    <div class="month" id="g-month">R1 · 9月</div>
+    <div class="countdown" id="g-countdown">距中考 280天</div>
+    <div class="money" id="g-money">💰 600</div>
+  </div>
+  <div class="rank-bar"><div class="rank-fill" id="rank-fill" style="width:50%"></div><div class="rank-text" id="rank-text">🏅 第260名 / 520人</div></div>
+  <div class="rank-label"><span>520名</span><span id="rank-arrow"></span><span>第1名</span></div>
+</div>
+<div class="gcont" id="gcont"></div>
+<div class="cbar" id="cbar" style="display:none"><button class="btn" id="cbtn" onclick="window._g.onConfirm()">确认</button></div>
+</div>
+<div id="S3" class="scr">
+<div class="eemoji" id="e-emoji">🌟</div>
+<div class="etitle" id="e-title"></div>
+<div class="equote" id="e-quote"></div>
+<div class="escbox" id="e-scores"></div>
+<div class="eadmit" id="e-admit"></div>
+<button class="btn" style="font-size:15px;padding:10px 20px" onclick="location.reload()">🔄 再来一局</button>
+</div>
+</div>
+<script>
+(function(){
+"use strict";
+var CL=['许晓晴','徐艺洲','蓝昊','耿邦粟','高进程'];
+function cm(){return CL[Math.floor(Math.random()*CL.length)];}
+function R(){return Math.random();}
+function rI(a,b){return Math.floor(R()*(b-a+1))+a;}
+function cl(v,mn,mx){if(mn===undefined)mn=0;if(mx===undefined)mx=100;return Math.max(mn,Math.min(mx,Math.round(v)));}
+function pkNew(arr,usedMap,key){
+  if(!usedMap[key])usedMap[key]=[];
+  var avail=[];
+  for(var i=0;i<arr.length;i++){if(usedMap[key].indexOf(i)<0)avail.push(i);}
+  if(!avail.length){usedMap[key]=[];for(var i=0;i<arr.length;i++)avail.push(i);}
+  var idx=avail[Math.floor(R()*avail.length)];
+  usedMap[key].push(idx);
+  return arr[idx];
+}
+function shuffle(a){var b=a.slice();for(var i=b.length-1;i>0;i--){var j=Math.floor(R()*(i+1));var t=b[i];b[i]=b[j];b[j]=t;}return b;}
+
+// ===== 音乐系统 (Web Audio API 纯代码生成) =====
+var audioCtx=null;
+var musicPlaying=false;
+var musicNodes=[];
+var currentTrack='';
+
+function initAudio(){
+  if(audioCtx)return;
+  try{audioCtx=new(window.AudioContext||window.webkitAudioContext)();}catch(e){return;}
+}
+
+function stopMusic(){
+  for(var i=0;i<musicNodes.length;i++){
+    try{musicNodes[i].stop?musicNodes[i].stop():musicNodes[i].disconnect();}catch(e){}
+  }
+  musicNodes=[];musicPlaying=false;currentTrack='';
+  document.getElementById('music-btn').textContent='🔇';
+}
+
+function playNote(freq,start,dur,type,vol,detune){
+  if(!audioCtx)return;
+  var osc=audioCtx.createOscillator();
+  var gain=audioCtx.createGain();
+  osc.type=type||'square';
+  osc.frequency.value=freq;
+  if(detune)osc.detune.value=detune;
+  gain.gain.setValueAtTime(0,audioCtx.currentTime+start);
+  gain.gain.linearRampToValueAtTime(vol||0.06,audioCtx.currentTime+start+0.02);
+  gain.gain.setValueAtTime(vol||0.06,audioCtx.currentTime+start+dur*0.7);
+  gain.gain.linearRampToValueAtTime(0,audioCtx.currentTime+start+dur);
+  osc.connect(gain);gain.connect(audioCtx.destination);
+  osc.start(audioCtx.currentTime+start);
+  osc.stop(audioCtx.currentTime+start+dur);
+  musicNodes.push(osc);
+  return osc;
+}
+
+// 主界面BGM - 轻松像素风，温暖循环
+function playMenuMusic(){
+  if(currentTrack==='menu')return;
+  stopMusic();currentTrack='menu';musicPlaying=true;
+  document.getElementById('music-btn').textContent='🔊';
+  // C大调温暖旋律
+  var melody=[262,294,330,349,330,294,262,247,262,294,330,392,349,330,294,262];
+  var bass=[131,131,165,165,175,175,131,131,131,131,165,165,175,175,131,131];
+  var bpm=0.32;
+  function loopMenu(){
+    if(currentTrack!=='menu')return;
+    for(var i=0;i<melody.length;i++){
+      playNote(melody[i],i*bpm,bpm*0.85,'square',0.04);
+      playNote(bass[i],i*bpm,bpm*0.9,'triangle',0.05);
+      // 和弦点缀
+      if(i%4===0)playNote(melody[i]*1.5,i*bpm,bpm*2,'sine',0.02);
+    }
+    setTimeout(loopMenu,melody.length*bpm*1000);
+  }
+  loopMenu();
+}
+
+// 游戏中BGM - 节奏感更强，有紧迫感
+function playGameMusic(){
+  if(currentTrack==='game')return;
+  stopMusic();currentTrack='game';musicPlaying=true;
+  document.getElementById('music-btn').textContent='🔊';
+  // A小调，学习的节奏感
+  var melody=[220,262,294,330,349,330,294,262,220,247,262,330,294,262,247,220];
+  var bass=[110,110,147,147,175,175,131,131,110,110,147,147,175,175,131,110];
+  var bpm=0.28;
+  function loopGame(){
+    if(currentTrack!=='game')return;
+    for(var i=0;i<melody.length;i++){
+      playNote(melody[i],i*bpm,bpm*0.75,'square',0.035);
+      playNote(bass[i],i*bpm,bpm*0.85,'triangle',0.045);
+      // 打击节奏
+      if(i%2===0)playNote(80,i*bpm,0.05,'sawtooth',0.03);
+    }
+    setTimeout(loopGame,melody.length*bpm*1000);
+  }
+  loopGame();
+}
+
+// 结局BGM - 温暖感人
+function playEndMusic(){
+  if(currentTrack==='end')return;
+  stopMusic();currentTrack='end';musicPlaying=true;
+  document.getElementById('music-btn').textContent='🔊';
+  // F大调，温暖舒缓
+  var melody=[349,392,440,523,494,440,392,349,330,349,392,440,523,587,523,440];
+  var bass=[175,175,220,220,247,247,196,196,165,175,196,220,262,262,220,175];
+  var bpm=0.45;
+  function loopEnd(){
+    if(currentTrack!=='end')return;
+    for(var i=0;i<melody.length;i++){
+      playNote(melody[i],i*bpm,bpm*0.9,'sine',0.05);
+      playNote(bass[i],i*bpm,bpm*0.95,'triangle',0.04);
+      // 柔和和弦
+      if(i%2===0)playNote(melody[i]*0.75,i*bpm,bpm*1.5,'sine',0.025);
+    }
+    setTimeout(loopEnd,melody.length*bpm*1000);
+  }
+  loopEnd();
+}
+
+function toggleMusic(){
+  initAudio();
+  if(musicPlaying){stopMusic();}
+  else{
+    // 根据当前界面播放对应音乐
+    if(document.getElementById('S0').classList.contains('on')||document.getElementById('S1').classList.contains('on'))playMenuMusic();
+    else if(document.getElementById('S3').classList.contains('on'))playEndMusic();
+    else playGameMusic();
+  }
+}
+
+// ===== 游戏数据 =====
+var ROUNDS=[
+  {m:'9月',name:'🏫 "开学了，假装很努力"',days:280,exam:true,en:'摸底考'},
+  {m:'10月',name:'📝 "第一次被现实教做人"',days:250},
+  {m:'11月',name:'📊 "期中：家长会的审判日"',days:220,exam:true,en:'期中考'},
+  {m:'12月',name:'❄️ "冷的不只是天气"',days:190},
+  {m:'1月',name:'📋 "期末：寒假自由的代价"',days:160,exam:true,en:'期末考'},
+  {m:'2月',name:'🧧 "过年：亲戚的灵魂拷问"',days:130,extra:true},
+  {m:'3月',name:'🔥 "百日冲刺：还来得及吗"',days:100},
+  {m:'4月',name:'📝 "一模：最后的摸底"',days:70,exam:true,en:'一模'},
+  {m:'5月',name:'📮 "填志愿：人生第一次赌博"',days:40,vol:true},
+  {m:'6月',name:'🎯 "决战：就这？就这！"',days:0,final:true}
+];
+var FAMILIES=[
+  {name:'🏦 大富之家',money:2000,desc:'补习班随便报，但你妈对你期望超高'},
+  {name:'🏠 小康之家',money:600,desc:'够用但得算着花，你妈说尽力就好'}
+];
+var RANK_TIERS=[
+  {min:1,max:30,pct:8,icon:'👑',cls:'eu',label:'欧皇开局',comments:['你初二下居然考了全校前30？！你确定不是梦游考的？','六班老师看到成绩单笑出了声，已经在想怎么吹了。','你妈把你的成绩单设成了手机壁纸。']},
+  {min:31,max:150,pct:22,icon:'⭐',cls:'high',label:'成绩偏高',comments:['不错嘛，六班老师对你寄予厚望。别让他失望了。',cm()+'：大佬带我飞！ 你：我自己都还没飞起来……','你妈跟亲戚炫耀的时候嘴角已经压不住了。']},
+  {min:151,max:350,pct:40,icon:'😐',cls:'mid',label:'年级中游',comments:['不上不下，最安全也最危险的位置。',cm()+'和你排名就差两名，你们互相看了一眼，默默翻开课本。','六班老师说："你有潜力，就是不够努力。"——你听了八百遍了。']},
+  {min:351,max:460,pct:22,icon:'😬',cls:'low',label:'成绩偏低',comments:['排名有点靠后……但初三是奇迹发生的地方。',cm()+'拍了拍你的肩膀："没事，我比你还低。"','你妈最近看你的眼神多了一丝复杂。']},
+  {min:461,max:520,pct:8,icon:'💀',cls:'fei',label:'非酋开局',comments:['你认真的吗……这排名跟你的运气一样离谱。',cm()+'笑到趴桌上："你居然比我还低！"','没关系，触底反弹了解一下？逆袭故事都是这么开始的。']}
+];
+
+// ===== 行动 =====
+var ACTIONS=[
+  {id:'hard',name:'📖 埋头苦学',desc:'把自己钉在书桌前',eff:function(){return{skill:rI(5,9)};},
+    fl:['做了三套卷子，第三套和第一套错的一模一样。','背了一晚古诗词，梦里都在"大漠孤烟直"……',cm()+'的笔记工整得像印刷品，你的像医生处方。','abandon abandon……'+cm()+'说这个词是在描述你的英语水平。','你盯着化学方程式看了半小时，它也盯着你看了半小时。','物理受力分析画了半小时，重力都忘标了。'+cm()+'："你这分析了个寂寞。"','刷完一本五三，感觉自己无所不能。翻开下一本——又不会了。','英语完形填空连错5个，你怀疑自己选的是平行宇宙的答案。']},
+  {id:'tutor',name:'💰 报补习班',desc:'花钱买分数 · 💰100',cost:100,eff:function(){return{skill:rI(6,12)};},
+    fl:['一节课100块，每分钟1.67元，打瞌睡就是在烧钱。','补习老师讲得比学校老师好是怎么回事……',cm()+'也来了同一个补习班，你俩在门口面面相觑。','补习完走出教室，你觉得世界都清晰了——五分钟后又忘了。','补习班隔壁就是奶茶店，每次下课都是意志力的考验。','今天的补习老师用了个绝妙的比喻，你一下子就记住了那个公式。','你在补习班认识了隔壁校的学霸，互相加了微信交流学习方法。','补习班考了个小测，你居然是全班最高分。虽然只有12个人。']},
+  {id:'rest',name:'😴 好好休息',desc:'什么都不干，躺平一天',eff:function(){return{skill:rI(-2,0)};},
+    fl:['躺了一整天，罪恶感比精力恢复得更快。','本来午休20分钟，醒来天已经黑了。'+cm()+'发消息："你死了？"','什么都没干，但感觉世界都清晰了。','做了个梦，梦见自己考了满分。醒来发现闹钟响了。','睡了12个小时，感觉自己满血复活，可以再战三百回合。','躺在床上刷了一天短视频，手指比脑子累。但确实放松了。','发了一天呆，看着窗外的云慢慢移动。这种时刻以后会怀念的吧。','你在沙发上睡着了，醒来发现妈妈给你盖了条毯子。']},
+  {id:'friend',name:'👫 约约朋友',desc:'CocoPark走起！奶茶喝起来！',eff:function(){return{skill:rI(-3,0)};},
+    fl:['和'+cm()+'聊了两小时八卦，一个字没学，但人活过来了。','去CocoPark逛了一圈，钱没花但腿废了。'+cm()+'买了杯霸王茶姬请你。','约了'+cm()+'去深圳湾骑车，"人生苦短先骑为敬"。','和'+cm()+'去万象城吃了个甜品，生活突然有了盼头。','和'+cm()+'在学校天台吹风聊天，突然觉得压力没那么大了。',cm()+'拉你去福田CBD拍照，你俩在市民中心广场装了半天文艺青年。','和'+cm()+'去了趟书城，本来说好看书的，结果在文具区逛了一小时。','约了'+cm()+'去CocoPark看了场电影，出来的时候觉得世界真美好。']},
+  {id:'game',name:'🎮 打打游戏',desc:'就玩一把……真的就一把……',eff:function(){return{skill:rI(-5,-1)};},
+    fl:['三角洲新赛季开了！和'+cm()+'约了"就打一把排位"……五把之后天亮了。','王者更新了，你说好就玩一局，结果连跪五局。但心情确实好了。',cm()+'在蛋仔派对抽到了联名皮肤，你看着零花钱余额陷入沉思。','原神/星铁更新了，数学卷放在桌上，手机在抽屉里震动……','你和'+cm()+'打了一晚上三角洲，段位上了两颗星，明天肯定起不来。','打了三小时手游，拇指都麻了，但脑子终于不想学习的事了。',cm()+'拉你开了个新坑，你从"就看看"到"这游戏真好玩"只用了10分钟。','你在游戏里遇到了一个超强队友，打完才发现是隔壁班第一名。']},
+  {id:'parent',name:'👨‍👩‍👧 亲子时间',desc:'难得温馨的一天',eff:function(){return{skill:rI(-1,1)};},
+    fl:['妈妈做了你最爱的糖醋排骨。','爸爸说"尽力就好"，你差点哭了。','你妈突然问："你以后想做什么？"你愣住了。','全家去深圳湾散步，夕阳很好，什么都没说但什么都说了。','爸妈带你去吃了顿椰子鸡，吃到第三碗你才想起来明天有考试。','你妈翻出了你小时候的照片，全家笑了一晚上。','爸爸教你下了盘象棋，你输了但心情特别好。','妈妈给你削了个苹果端进房间。什么都没说，但你知道她在支持你。']},
+  {id:'allnight',name:'🌙 熬夜苦读',desc:'拼了！今晚不睡了！',eff:function(){return{skill:rI(7,11)};},
+    fl:['凌晨两点搞懂了二次函数……等等，这不是明天考的。','台灯是你最忠实的朋友，第二忠实的是黑眼圈。','妈：怎么还不睡？你：马上（翻开下一页）','刷完三套卷子抬头一看，天亮了。窗外有鸟叫。','困到用冷水洗脸，清醒了三分钟，然后更困了。','泡了杯咖啡，结果太苦了喝不下去。你觉得咖啡和学习一样苦。','凌晨三点突然想通了一道大题，兴奋得睡不着了。','第二天上课趴了一整天。但昨晚的知识点确实记住了。']},
+  {id:'master',name:'👨‍🏫 名师一对一',desc:'传说中的金牌老师 · 💰300',cost:300,minRd:4,eff:function(){return{skill:rI(10,16)};},
+    fl:['名师一句话点醒梦中人！原来这道题可以这么想！','一节课300，你妈的钱不是大风刮来的，认真听！','名师："你的基础其实不差，就是缺个方法。"你半信半疑。','名师画了一张思维导图，你感觉整本书的知识点全串起来了。','"这个技巧高考也能用。"名师随手写了个公式，你如获至宝。','名师说你有一个关键概念理解错了，纠正之后你感觉天都亮了。','名师给你布置了5道针对性练习题，比你自己刷100道都有用。','你妈在门外偷听了一节课，出来说："这钱花得值。"']}
+];
+
+// ===== 事件系统 =====
+var EVT_POS=[
+  {t:'「食堂の奇迹」',d:'今天食堂出了新菜，而且——居然好吃？！全班震惊。'+cm()+'直接冲了三碗饭。',o:[
+    {t:'大快朵颐',d:'"加饭！再加鸡腿！"吃饱了才有力气学习',e:{skill:3}},
+    {t:'拍照发朋友圈',d:'获赞47个，这是今天最大的成就',e:{skill:2}},
+    {t:'打包一份给妈',d:'"妈，学校居然有好吃的了！"你妈感动了',e:{skill:4}}]},
+  {t:'「课间奶茶团」',d:cm()+'在班群发起霸王茶姬拼单。"伯牙绝弦还是万里木兰？"全班沸腾。',o:[
+    {t:'来一杯！快乐就是生产力！',d:'一杯下去，世界都温柔了',e:{skill:2,money:-15}},
+    {t:'忍住……翻开课本',d:'你看着同学们喝奶茶的幸福表情，默默做题',e:{skill:5}},
+    {t:'豪气！今天我请全组！',d:'"大佬！"全组对你好感度拉满',e:{money:-60}},
+    {t:'自己泡了杯枸杞',d:'"养生从初三开始。"'+cm()+'：你是40岁吗？',e:{skill:3}}]},
+  {t:'「暗恋加成」',d:'你暗恋的那个人这次模考居然进了前十……你默默攥紧了笔。',o:[
+    {t:'化为动力！我也要更努力！',d:'这就是恋爱的力量，今晚多做两套卷子',e:{skill:8}},
+    {t:'走神一整天',d:'脑子里全是ta的身影，课完全没听进去',e:{skill:-3}},
+    {t:'在ta桌上偷偷放了个橘子',d:'也不知道ta发现没有。你的心跳了一整天',e:{skill:2}}]},
+  {t:'「体育课解放」',d:'体育老师临时请假！！！这节课自由活动！全班欢呼。',o:[
+    {t:'和'+cm()+'打篮球',d:'来了一场1v1，虽然输了但真爽，脑子清醒了',e:{skill:3}},
+    {t:'回教室刷题',d:'你是整层楼唯一在学习的人。保安大叔向你投来敬佩的目光',e:{skill:6}},
+    {t:'趴桌子上睡觉',d:'这是本周最幸福的45分钟',e:{skill:2}},
+    {t:'和全班踢毽子',d:'你居然踢了38个！隐藏天赋？开心了一整天',e:{skill:3}}]},
+  {t:'「突然打通了任督二脉！」',d:'今天上数学课的时候，老师讲了一道题……你突然！全部！想通了！那些公式之间的联系像一道闪电劈开了你的脑子。',o:[
+    {t:'趁热打铁，疯狂刷题！',d:'手停不下来！一口气做了50道题全对！太爽了',e:{skill:12}},
+    {t:'冷静……先把笔记整理好',d:'你用三种颜色的笔把所有关联画了出来。这笔记能传家',e:{skill:9}},
+    {t:'激动地分享给'+cm(),d:'"你听我说！这里和这里是连着的！"ta：啊？',e:{skill:7}}]},
+  {t:'「老师表扬了你！」',d:'课堂上老师随机点名提问，你居然答对了！老师说："不错啊，最近有进步。"全班的目光都在你身上。',o:[
+    {t:'嘿嘿嘿（飘了）',d:'这种感觉太好了，决定继续保持',e:{skill:5}},
+    {t:'故作淡定',d:'"没什么，基本操作。"内心：啊啊啊啊啊啊',e:{skill:4}},
+    {t:'受到鼓舞，课后找老师请教',d:'老师看你态度认真，额外给你讲了半小时',e:{skill:8}}]},
+  {t:'「'+cm()+'请你吃八合里」',d:'"'+cm()+'今天生日！放学一起去吃八合里牛肉火锅！"你完全无法拒绝。',o:[
+    {t:'冲！学习明天再说',d:'涮了三盘牛肉，人生圆满了',e:{skill:1}},
+    {t:'去！但带着单词本',d:'一边涮肉一边背单词，牛油味的knowledge',e:{skill:5}},
+    {t:'AA制不好意思让人请',d:'"我转你。"ta："不用！给我好好考试就行！"',e:{skill:3,money:-30}}]},
+  {t:'「捡到一本学霸笔记」',d:'你在图书馆捡到一本不知道谁的笔记本。翻开一看——天哪，这字迹、这排版、这总结方式……简直就是教科书级别。',o:[
+    {t:'如获至宝，认真研读',d:'笔记里的方法论让你茅塞顿开。感谢这位不知名的学霸',e:{skill:9}},
+    {t:'拍照发群里分享',d:'全班感激涕零。'+cm()+'："你是天使吗？"',e:{skill:5}},
+    {t:'交到失物招领处',d:'做好人好事。结果是隔壁班第一名的，ta请你喝了杯奶茶',e:{skill:3}}]}
+];
+var EVT_NEU=[
+  {t:'「三角洲の诱惑」',d:'三角洲行动新赛季上线！'+cm()+'在课间疯狂安利："今晚一起上分！大师段位等着我们！"你手痒得不行。',o:[
+    {t:'今晚开黑！冲大师！',d:'打到凌晨1点，段位上了但明天起不来',e:{skill:-5}},
+    {t:'忍住！中考完再说',d:'你把手机锁进抽屉。脑子里全是枪声，但你做了对的事',e:{skill:6}},
+    {t:'看一眼更新内容就好……',d:'"就看一眼"——三小时后你还在看',e:{skill:-2}},
+    {t:'卸载了。要杀要剐来吧',d:cm()+'："你疯了？！" 你的手在发抖但你没有后悔',e:{skill:7}}]},
+  {t:'「模考の量子力学」',d:'模考成绩出了。你有些科进步很大，有些科退步更大。'+cm()+'："你到底是进步了还是退步了？"',o:[
+    {t:'乐观分析',d:'"说明我有潜力！只是发挥不稳！"',e:{skill:5}},
+    {t:'焦虑分析',d:'"每一科都不能放松啊……"越想越慌',e:{skill:-2}},
+    {t:'薛定谔疗法',d:'"不看就没退步。"'+cm()+'："你这是唯心主义。"',e:{skill:1}},
+    {t:'拿着卷子去找老师',d:'老师帮你分析了每道错题，受益匪浅',e:{skill:8}}]},
+  {t:'「手机の告别」',d:'班主任宣布：月考前统一收手机！你和三角洲的快乐，没了。'+cm()+'哭丧着脸交了三台。',o:[
+    {t:'乖乖上交',d:'"反正WiFi也卡……"',e:{skill:4}},
+    {t:'交旧手机，藏新手机',d:'赌一把！结果被班主任搜到了……社死现场',e:{skill:-8}},
+    {t:'我早就没了',d:'"我妈上个月就收了……"'+cm()+'投来同情的目光',e:{skill:2}},
+    {t:'含泪上交，仪式感告别',d:'你对着手机说了句"等我考完"',e:{skill:5}}]},
+  {t:'「台风假の诱惑」',d:'天气预报说明天可能挂8号风球！'+cm()+'已经在倒计时了。全班都在祈祷。',o:[
+    {t:'台风真来了！全班狂欢！',d:'"感谢大自然！"群里发了999个烟花',e:{skill:-3}},
+    {t:'台风没来……深圳结界',d:'"深圳结界真的存在。"'+cm()+'哭了',e:{skill:2}},
+    {t:'不管了先学',d:'台风来不来跟我有什么关系',e:{skill:6}},
+    {t:'台风天在家复习效率超高',d:'没有手机+下雨天=专注力MAX',e:{skill:7}}]},
+  {t:'「沙县小吃の召唤」',d:'学校门口的沙县小吃上了新品！蒸饺+拌面+炖汤套餐只要15块。下课铃响的一瞬间，全班冲出教室。',o:[
+    {t:'冲！来个全家桶！',d:'蒸饺+拌面+炖汤，吃到撑。你和'+cm()+'抢最后一笼蒸饺',e:{money:-15}},
+    {t:'算了太挤了',d:'你在教室窗户看着狂奔的人群，觉得他们好快乐',e:{skill:3}},
+    {t:'让'+cm()+'帮你带一份',d:'"给你带了拌面加卤蛋！"友情万岁',e:{money:-12,skill:1}}]},
+  {t:'「课间の哲学」',d:'你和'+cm()+'在走廊讨论人生。"我们为什么要中考？""因为不考就没高中读。""……确实。"',o:[
+    {t:'继续讨论人生',d:'"虽然没想通，但心里舒服了一点"',e:{skill:2}},
+    {t:'突然顿悟',d:'"行，先考上再说。想这么多没用"',e:{skill:5}},
+    {t:'被老师逮到了',d:'"你们两个！上课了还不进来！"',e:{skill:-1}},
+    {t:'决定写进作文里',d:'你把刚才的对话记了下来。语文老师：这素材不错',e:{skill:4}}]},
+  {t:'「突然被叫家长」',d:'班主任找你谈话："让你妈明天来一趟。"你的心沉了一下。回家路上你在想怎么开口。',o:[
+    {t:'硬着头皮说了',d:'你妈叹了口气："知道了。"没有骂你，反而更慌了',e:{skill:3}},
+    {t:'先写了张保证书',d:'"妈你看！"你妈："保证书我收了一抽屉了"',e:{skill:2}},
+    {t:'主动跟老师聊了聊',d:'老师其实只是想了解情况，没那么严重',e:{skill:5}},
+    {t:'结果是表扬……',d:'原来是最近进步了老师想鼓励你。白紧张了！',e:{skill:8}}]},
+  {t:'「同桌换了」',d:'班主任调座位，你的新同桌是'+cm()+'。你们互相看了一眼。',o:[
+    {t:'太好了！能一起讨论题',d:'新同桌是学霸，你蹭到了不少知识',e:{skill:5}},
+    {t:'完蛋，天天聊天没法学了',d:'你们上课传了17张小纸条',e:{skill:-4}},
+    {t:'无所谓，谁坐都一样',d:'你该学的照学。同桌其实人挺好的',e:{skill:2}}]}
+];
+var EVT_NEG=[
+  {t:'「家长群の核弹」',d:'班主任在家长群发了："最近有部分同学上课注意力不集中……"你妈的眼神慢慢转向你。',o:[
+    {t:'先发制人：妈那说的不是我！',d:'"那你心虚什么？"完了，越描越黑',e:{skill:-1}},
+    {t:'二话不说锁门学习',d:'用行动证明自己（有效期约3天）',e:{skill:6}},
+    {t:'反向安慰：妈你别焦虑',d:'"焦虑影响我学习"——你妈气笑了',e:{skill:2}},
+    {t:'主动给妈看今天的笔记',d:'"你看我有在认真学！"你妈表情缓和了',e:{skill:4}}]},
+  {t:'「作业写到崩溃」',d:'今天：数学两张卷+英语作文+物理实验报告+语文随笔。'+cm()+'已经开始抄了。你的手在第三项时罢工。',o:[
+    {t:'全部硬写！',d:'"我与作业今夜必须死一个！"写到凌晨全搞定',e:{skill:8}},
+    {t:'抄'+cm()+'的',d:'"抄也是一种学习"——你们达成共识',e:{skill:-2}},
+    {t:'选择性完成',d:'"老师我昨天身体不舒服……"这借口第八次了',e:{skill:1}},
+    {t:'边哭边写',d:'眼泪滴在试卷上把答案糊了。但是写完了！',e:{skill:6}}]},
+  {t:'「深圳の天气暴击」',d:'早上30度穿短袖，下午暴雨降到15度。你和'+cm()+'在回家路上瑟瑟发抖。',o:[
+    {t:'硬扛！深圳人不需要秋天',d:'结果第二天感冒了……请了半天假',e:{skill:-5}},
+    {t:'冲进书城躲雨',d:'意外遇到'+cm()+'，你们顺便一起学了两小时',e:{skill:6}},
+    {t:'叫妈来接',d:'"妈！带伞！带外套！带奶茶！"你妈带了三样',e:{skill:2}},
+    {t:'淋雨狂奔回家',d:'跑着跑着突然觉得好爽，青春不就是这样吗',e:{skill:1}}]},
+  {t:'「英语听说考の噩梦」',d:'英语听说考试，机器突然卡了！你对着屏幕说了三遍答案它都没录上。',o:[
+    {t:'疯狂重试！',d:'最后一秒终于录上了！你差点亲屏幕一口',e:{skill:3}},
+    {t:'举手求助',d:'监考老师重启了机器。灵魂得到了安宁',e:{skill:1}},
+    {t:'深呼吸，从容应对',d:'冷静下来后反而超常发挥',e:{skill:7}},
+    {t:'无所谓了……',d:'"反正我英语也就那样……"但其实有点不甘',e:{skill:-2}}]},
+  {t:'「老师说"这题很简单"」',d:'数学老师说"这道题很简单"。然后全班30个人做错了。',o:[
+    {t:'我做对了！（真的）',d:'全班唯一做对的人！'+cm()+'："你确定不是蒙的？"',e:{skill:7}},
+    {t:'我也做错了',d:'"简单？？？"你怀疑学的不是同一门数学',e:{skill:-2}},
+    {t:'课后去问老师',d:'老师重新讲了一遍，这次听懂了',e:{skill:7}},
+    {t:'整理进错题本',d:'认真抄进错题本。下次一定对',e:{skill:5}}]},
+  {t:'「失眠の夜晚」',d:'凌晨1点，你盯着天花板。如果考不上普高怎么办？手机亮了，'+cm()+'发来消息："你睡了吗？"',o:[
+    {t:'聊一聊',d:'"没，我也睡不着。"你们聊到2点，心里突然踏实了',e:{skill:3}},
+    {t:'既然睡不着，不如学',d:'爬起来做了一套卷子。虽然困，但充实',e:{skill:6}},
+    {t:'听白噪音助眠',d:'"雨声10小时"……结果听了3小时还没睡',e:{skill:-1}},
+    {t:'给自己写了封信',d:'"未来的自己，不管考成什么样，都辛苦了。"写着写着就哭了',e:{skill:4}}]},
+  {t:'「被妈催命式监督」',d:'你妈突然开始实施"十分钟巡视一次"计划。每次经过房间都要开门看一眼。你快疯了。',o:[
+    {t:'妈你别看了！',d:'"我又没干什么！"你妈："那你心虚什么？"',e:{skill:-2}},
+    {t:'演一出好戏',d:'她每次来你都在奋笔疾书。其实刚才在发呆',e:{skill:1}},
+    {t:'和妈认真谈了谈',d:'"妈，你这样我压力很大。"她沉默了："好，我不看了。"',e:{skill:5}},
+    {t:'索性搬到客厅学',d:'"你不是要看吗？我就在这学！"你妈反而不好意思了',e:{skill:4}}]},
+  {t:'「考试粗心丢了20分」',d:'你看着发下来的卷子——有三道题你明明会做，但是！看！错！题！了！'+cm()+'："你是认真的吗？"',o:[
+    {t:'气到把卷子揉成团',d:'又展开来，心疼地抚平。这20分本来是你的啊',e:{skill:-3}},
+    {t:'在错题本上写了三遍',d:'"下次再粗心我就不是人！"——发了毒誓',e:{skill:6}},
+    {t:'安慰自己：至少我是会的',d:'"实力在那儿，下次仔细就好"',e:{skill:3}},
+    {t:'研究了一套检查流程',d:'做完先检查名字，再检查单位，最后通读一遍',e:{skill:8}}]}
+];
+
+// 固定事件选项池
+var SPRING_OPTS=[
+  {t:'微笑应对',d:'"谢谢关心，还在努力"（内心OS：关你什么事）',e:{money:200}},
+  {t:'躲进房间假装学习',d:'"妈我去做作业了！"你锁上门打开了手机',e:{skill:2,money:100}},
+  {t:'反杀！"叔你年终奖多少啊？"',d:'满桌沉默。你妈在桌下踩了你一脚',e:{money:50,skill:3}},
+  {t:'把压岁钱全存起来',d:'"这钱我要用来报补习班！"全场震惊',e:{money:300,skill:5}},
+  {t:'带着课本去聚餐',d:'亲戚们看你在角落做题都不好意思问了',e:{skill:5,money:150}},
+  {t:'和表哥表姐聊高中生活',d:'他们分享了不少经验，你突然不那么害怕了',e:{skill:6,money:100}},
+  {t:'一个一个怼回去',d:'"阿姨你家孩子考几分啊？"全桌气氛凝固',e:{skill:2,money:80}},
+  {t:'疯狂吃菜不说话',d:'嘴里塞满了菜就不用回答问题了',e:{money:120}},
+  {t:'表演才艺转移注意力',d:'你弹了首吉他/唱了首歌，亲戚们注意力全被转移了',e:{skill:3,money:150}},
+  {t:'拉着'+cm()+'视频拜年',d:'"我同学也在呢！"成功把话题带跑了',e:{skill:4,money:100}}
+];
+var OATH_OPTS=[
+  {t:'"我要上深中！！！"',d:'嗓子喊哑了但全身都在燃烧',e:{skill:7}},
+  {t:'嘴上敷衍，心里认真了',d:'回到教室后默默写了个目标贴在桌角',e:{skill:8}},
+  {t:'感动到哭了',d:cm()+'递纸巾。你擦了擦眼泪，觉得自己还能再战',e:{skill:6}},
+  {t:'和'+cm()+'互写鼓励纸条',d:'"一起加油！"你把纸条夹在课本第一页',e:{skill:7}},
+  {t:'偷偷许了个愿',d:'你也不知道向谁许的。但你闭上眼睛的时候，很认真',e:{skill:5}},
+  {t:'拍了张照发朋友圈',d:'"百日。"简简单单两个字，获赞102个',e:{skill:4}},
+  {t:'给未来的自己写了封信',d:'"100天后的你，应该在笑吧。"',e:{skill:6}},
+  {t:'和全班拍了张合照',d:'夕阳下520个人的影子连在一起。不管结果如何，这一刻值了',e:{skill:5}},
+  {t:'默默算了算还有多少天',d:'"100天……够了。"你翻开了第一页笔记',e:{skill:7}},
+  {t:'回家跟妈妈说了目标',d:'"妈，我想考XX学校。"她说："那我们一起努力。"',e:{skill:8}}
+];
+
+var VOL_SCHOOLS=[
+  {n:'🏆 四大(深中/实验/深外/高级)',l:587},{n:'🥇 十大(红岭/宝中/翠园/育才)',l:579},
+  {n:'🥈 二十大(南外/科高/人大附…)',l:568},{n:'🥉 其他公办普高(约70所)',l:480},
+  {n:'📋 民办高中/职业学校',l:300}
+];
+
+// 结局：直接按分数区间确定
+var ENDINGS=[
+  {id:'four',min:587,em:'🌟',t:'深中の传说',admit:'🏆 录取：四大名校',q:'录取短信来的那一刻，你妈发了18条朋友圈。标题：《我是如何培养出四大学子的》。你爸在旁边默默点赞。'+cm()+'发来消息："我就知道你行的！"'},
+  {id:'ten',min:579,em:'⭐',t:'十大圆梦',admit:'🥇 录取：十大高中',q:'九月开学那天，你站在校门口拍了张照。阳光很好，校门很大，你笑得像个傻子。'+cm()+'在旁边喊："快进来！我帮你占了个好座位！"'},
+  {id:'twenty',min:568,em:'👍',t:'二十大上岸',admit:'🥈 录取：二十大高中',q:'不是四大十大又怎样？你看看你身边的朋友，他们也都在这里。三年后的高考，才是真正的战场。而你，已经准备好了。'},
+  {id:'norm',min:480,em:'😊',t:'普高上岸',admit:'🥉 录取：公办普高',q:'"我是高中生了！"你发了条朋友圈。'+cm()+'秒赞并评论："普高也是高中！一起加油！"你笑着回了个👊。'},
+  {id:'other',min:0,em:'🔄',t:'换个赛道',admit:'📋 民办高中 / 职业学校',q:'第一天报到，你发现这里和想象中不一样——食堂居然好吃，社团居然丰富，同学居然有趣。也许换个赛道，风景也不错。有人在清华找到自我，有人在另一条路上找到热爱。'}
+];
+var BONUS=[
+  {id:'gamer',cond:function(g){return g.gameN>=4&&g.skill<65;},em:'🎮',t:'电竞の天赋',admit:'🎮 特殊结局',q:'你虽然中考一般，但三角洲行动打上了大师段位。'+cm()+'："要不……你去打职业？"你笑了笑。人生嘛，天赋这东西说不准的。'},
+  {id:'social',cond:function(g){return g.friendN>=4&&g.skill<65;},em:'🤝',t:'社交天花板',admit:'🤝 特殊结局',q:'你的中考成绩一般，但毕业那天所有人都来找你签名留言。'+cm()+'写的最长：整整两页。有些东西，比分数珍贵。'},
+  {id:'crash',cond:function(g){return g.skill<=15;},em:'🌤️',t:'给自己放个假',admit:'🌤️ 特殊结局',q:'你决定休息一段时间。世界不会因为你休息一下就停止转动。窗外的阳光很好，深圳的天很蓝。慢慢来，不着急。'}
+];
+
+// ===== STATE =====
+var G={};
+function initG(){
+  G={rd:0,skill:50,money:600,rank:260,prevRank:260,family:null,
+    msel:[],phase:'act',_evt:null,vol:[],gameN:0,friendN:0,
+    usedEvt:[],usedFl:{},flavors:[],_finalScore:null};
+}
+function show(id){var s=document.querySelectorAll('.scr');for(var i=0;i<s.length;i++)s[i].classList.remove('on');document.getElementById(id).classList.add('on');}
+function initStars(){var c=document.getElementById('stars');if(!c)return;for(var i=0;i<40;i++){var s=document.createElement('div');s.className='star';s.style.left=R()*100+'%';s.style.top=R()*100+'%';s.style.animationDelay=R()*2+'s';c.appendChild(s);}}
+
+function rollIntro(){
+  initAudio();
+  if(musicPlaying||!currentTrack)playMenuMusic();
+  initG();
+  G.family=FAMILIES[R()<.5?0:1];G.money=G.family.money;
+  var roll=R()*100,acc=0,tier=null;
+  for(var i=0;i<RANK_TIERS.length;i++){acc+=RANK_TIERS[i].pct;if(roll<acc){tier=RANK_TIERS[i];break;}}
+  if(!tier)tier=RANK_TIERS[2];
+  G.rank=rI(tier.min,tier.max);G.prevRank=G.rank;
+  // 根据排名反查分数，再算出skill，确保开局第一次考试排名不跳
+  var anchors=[[620,1],[610,3],[587,25],[579,50],[568,80],[520,160],[480,260],[430,400],[380,480],[300,515],[200,520]];
+  var targetScore=480;
+  for(var ai=0;ai<anchors.length-1;ai++){
+    if(G.rank>=anchors[ai][1]&&G.rank<=anchors[ai+1][1]){
+      var r2=(G.rank-anchors[ai][1])/(anchors[ai+1][1]-anchors[ai][1]);
+      targetScore=Math.round(anchors[ai][0]+(anchors[ai+1][0]-anchors[ai][0])*r2);
+      break;
+    }
+  }
+  if(G.rank<anchors[0][1])targetScore=620;
+  // skill = (targetScore - 50) / 580 * 100，加小随机
+  G.skill=cl(Math.round((targetScore-50)/580*100)+rI(-2,2),30,99);
+  show('S1');
+  document.getElementById('intro-icon').textContent=tier.icon;
+  document.getElementById('intro-icon').className='roll-anim';
+  var badge=document.getElementById('intro-rank-badge');
+  badge.className='rank-badge '+tier.cls;
+  badge.innerHTML=tier.label+' · 全校第'+G.rank+'名/520人';
+  document.getElementById('intro-family').textContent=G.family.name+' · '+G.family.desc+' · 💰'+G.money;
+  document.getElementById('intro-comment').textContent=tier.comments[rI(0,tier.comments.length-1)];
+}
+
+function startGame(){
+  if(musicPlaying)playGameMusic();
+  show('S2');startRound();
+}
+
+function startRound(){
+  G.phase='act';G.msel=[];G.flavors=[];
+  if(G.rd>0){
+    // 自然遗忘：前期适中，后期压力大
+    var forget=G.rd>=6?rI(3,6):rI(2,4);
+    G.skill=Math.max(5,G.skill-forget);
+  }
+  updUI();renderActions();
+}
+
+function renderActions(){
+  var r=ROUNDS[G.rd];
+  var need=r.extra?3:2;
+  var gc=document.getElementById('gcont');
+  var h='<div class="mt">'+r.name+'</div><div class="ms">'+r.m+' · 距中考'+r.days+'天</div>';
+  h+='<div class="sel-hint">选择 '+need+' 个行动（已选 '+G.msel.length+'/'+need+'）</div>';
+  if(G.flavors.length>0)h+='<div class="flavor">'+G.flavors.join(' | ')+'</div>';
+  h+='<div class="agrid">';
+  for(var i=0;i<ACTIONS.length;i++){
+    var a=ACTIONS[i];
+    var dis=(a.cost&&G.money<a.cost)||(a.minRd&&G.rd<a.minRd);
+    var sel=G.msel.indexOf(a.id)>=0;
+    var cls=dis?'acard dis':sel?'acard sel':'acard';
+    h+='<div class="'+cls+'" data-id="'+a.id+'" onclick="'+(dis?'':'window._g.toggleAct(\''+a.id+'\')')+'"><div class="an">'+a.name+'</div><div class="ad">'+a.desc+'</div></div>';
+  }
+  h+='</div>';
+  gc.innerHTML=h;
+  showBar(true,'确认（'+G.msel.length+'/'+need+'）');
+}
+
+function toggleAct(id){
+  var r=ROUNDS[G.rd];var need=r.extra?3:2;
+  var idx=G.msel.indexOf(id);
+  if(idx>=0){G.msel.splice(idx,1);}
+  else if(G.msel.length<need){G.msel.push(id);}
+  renderActions();
+}
+
+function showBar(v,txt){
+  document.getElementById('cbar').style.display=v?'flex':'none';
+  document.getElementById('cbtn').textContent=txt||'确认';
+}
+
+function onConfirm(){
+  if(G.phase==='vol'){confirmVol();return;}
+  if(G.phase!=='act')return;
+  var r=ROUNDS[G.rd];var need=r.extra?3:2;
+  if(G.msel.length!==need)return;
+  G.flavors=[];
+  for(var si=0;si<G.msel.length;si++){
+    var id=G.msel[si];
+    var act=null;
+    for(var ai=0;ai<ACTIONS.length;ai++){if(ACTIONS[ai].id===id){act=ACTIONS[ai];break;}}
+    if(!act)continue;
+    if(act.eff){
+      var e=act.eff();
+      // 边际递减：学力越高越难提升（模拟真实学习瓶颈）
+      if(e.skill>0){var sdim=Math.max(0.3,1-G.skill/150);e.skill=Math.max(1,Math.round(e.skill*sdim));}
+      if(e.skill)G.skill=cl(G.skill+e.skill,0,100);
+    }
+    if(act.cost)G.money-=act.cost;
+    if(id==='game')G.gameN++;
+    if(id==='friend')G.friendN++;
+    if(act.fl)G.flavors.push(pkNew(act.fl,G.usedFl,id));
+  }
+  G.phase='evt';
+  updUI();
+  afterActions();
+}
+
+function afterActions(){
+  var r=ROUNDS[G.rd];
+  if(G.rd===5){showFixedEvt('spring');return;}
+  if(G.rd===6){showFixedEvt('oath');return;}
+  if(r.vol){showVol();return;}
+  if(r.final){showFinal();return;}
+  triggerRandom();
+}
+
+function triggerRandom(){
+  var all=[];
+  var pools=[{arr:EVT_POS,w:.35},{arr:EVT_NEU,w:.30},{arr:EVT_NEG,w:.35}];
+  for(var pi=0;pi<pools.length;pi++){
+    for(var ei=0;ei<pools[pi].arr.length;ei++){
+      var key=pi+'_'+ei;
+      if(G.usedEvt.indexOf(key)<0)all.push({evt:pools[pi].arr[ei],key:key,w:pools[pi].w});
+    }
+  }
+  if(!all.length){endRound();return;}
+  var total=0;for(var i=0;i<all.length;i++)total+=all[i].w;
+  var r=R()*total,acc=0,chosen=all[0];
+  for(var i=0;i<all.length;i++){acc+=all[i].w;if(r<acc){chosen=all[i];break;}}
+  G.usedEvt.push(chosen.key);
+  showEvt(chosen.evt);
+}
+
+function showFixedEvt(type){
+  var pool=type==='spring'?SPRING_OPTS:OATH_OPTS;
+  var desc=type==='spring'?
+    '🧧 过年特辑：亲戚の灵魂拷问\n\n"考了多少分啊？在学校第几名啊？想考哪个高中啊？" 七大姑八大姨轮番上阵，'+cm()+'的妈妈已经开始跟你妈攀比了。桌上的饭都不香了。':
+    '🔥 百日誓师大会\n\n全年级站在操场上，红色横幅写着"百日冲刺"。校长讲了半小时，隔壁班喊得比你们班响。'+cm()+'嗓子都喊哑了。阳光很烈，你的影子拉得很长。';
+  var title=type==='spring'?'🧧 过年特辑：亲戚の灵魂拷问':'🔥 百日誓师大会';
+  var picked=shuffle(pool).slice(0,3);
+  var evt={t:title,d:desc.split('\n\n')[1],o:picked};
+  showEvt(evt);
+}
+
+function showEvt(evt){
+  showBar(false);
+  var gc=document.getElementById('gcont');
+  var flav='';
+  if(G.flavors.length>0)flav='<div class="flavor">'+G.flavors.join(' | ')+'</div>';
+  var h=flav+'<div class="eov"><div class="ebox"><div class="et">'+evt.t+'</div><div class="ed">'+evt.d+'</div><div class="eo">';
+  for(var i=0;i<evt.o.length;i++){
+    var o=evt.o[i];
+    h+='<div class="eopt" onclick="window._g.chooseEvt('+i+')"><div class="ol">'+String.fromCharCode(65+i)+'. '+o.t+'</div><div class="oe">'+o.d+'</div></div>';
+  }
+  h+='</div></div></div>';
+  gc.innerHTML=h;
+  G._evt=evt;
+}
+
+function chooseEvt(i){
+  var o=G._evt.o[i],e=o.e||{};
+  // 事件效果也有边际递减
+  if(e.skill){
+    var sv=e.skill;
+    if(sv>0){sv=Math.max(1,Math.round(sv*Math.max(0.3,1-G.skill/150)));}
+    G.skill=cl(G.skill+sv,0,100);
+  }
+  if(e.money)G.money+=e.money;
+  updUI();
+  var r=ROUNDS[G.rd];
+  if(r.exam){setTimeout(function(){showExam(r.en);},600);}
+  else{setTimeout(function(){endRound();},600);}
+}
+
+function calcScore(){
+  // 总分 = 文化课(满分580) + 体育(默认满分50) = 满分630
+  // 发挥系数 0.95~1.03，波动约±3%，一次考试最多偏差20~30分
+  var fac=Math.max(.95,Math.min(1.03,1+(R()-.5)*.06));
+  var academic=Math.min(580,Math.round(580*(G.skill/100)*fac));
+  var total=Math.min(630,academic+50);
+  return{total:total};
+}
+function showExam(name){
+  var sc=calcScore();var old=G.rank;G.rank=estR(sc.total);G.prevRank=old;
+  showBar(false);var gc=document.getElementById('gcont');var diff=old-G.rank;
+  var h='<div style="padding:12px"><div class="mt">📋 '+name+'成绩</div><div style="margin:12px 0">';
+  h+='<div class="rl" style="animation-delay:.3s;font-size:16px;color:#ffd700"><span class="ri">📊</span><span style="flex:1">总分</span><span>'+sc.total+'/630</span></div>';
+  var rc=diff>0?'#4ecdc4':diff<0?'#e94560':'#888';
+  var rt=diff>0?'↑'+diff+'名':diff<0?'↓'+(-diff)+'名':'不变';
+  h+='<div class="rl" style="animation-delay:.9s;font-size:14px"><span class="ri">🏅</span><span style="flex:1">全校第'+G.rank+'名/520</span><span style="color:'+rc+'">'+rt+'</span></div>';
+  var cmt='';
+  if(diff>50)cmt='📣 全班都惊了！"你是不是偷偷请了家教？！"';
+  else if(diff>20)cmt='📣 '+cm()+'看到你的排名直接惊了："你开挂了？！"';
+  else if(diff>10)cmt='📣 班主任的眼神从"算了吧"变成了"有戏"！';
+  else if(diff>0)cmt='📣 稳步前进！'+cm()+'："不错嘛！"';
+  else if(diff===0)cmt='📣 名次纹丝不动。'+cm()+'："稳如老狗。"';
+  else if(diff>-10)cmt='📣 你妈拿着成绩单叹了口气。第三口了。';
+  else if(diff>-20)cmt='📣 '+cm()+'拍了拍你的肩："没事，还有下次。"';
+  else cmt='📣 你爸把WiFi密码改了。"考上普高再告诉你。"';
+  h+='<div style="margin-top:12px;font-size:12px;color:#ccc;animation:fsi .4s 1.2s both">'+cmt+'</div></div></div>';
+  gc.innerHTML=h;
+  setTimeout(function(){updUI();showBar(true,'继续 →');document.getElementById('cbtn').onclick=function(){document.getElementById('cbtn').onclick=function(){window._g.onConfirm();};endRound();};},2000);
+}
+// 排名计算：分段线性映射，精确对齐真实分数线
+// 四大587→第25名, 十大579→第50名, 二十大568→第80名
+// 普高480→第260名(50%), 620+→全校前1~3名
+// 平时考试有50%惯性，中考(final=true)纯分数排名
+function estR(t,final){
+  // 分段线性：(分数, 排名) 锚点
+  var anchors=[[620,1],[610,3],[587,25],[579,50],[568,80],[520,160],[480,260],[430,400],[380,480],[300,515],[200,520]];
+  var rank=260;
+  if(t>=anchors[0][0]){rank=anchors[0][1];}
+  else if(t<=anchors[anchors.length-1][0]){rank=anchors[anchors.length-1][1];}
+  else{
+    for(var i=0;i<anchors.length-1;i++){
+      if(t<=anchors[i][0]&&t>=anchors[i+1][0]){
+        var ratio=(t-anchors[i+1][0])/(anchors[i][0]-anchors[i+1][0]);
+        rank=Math.round(anchors[i+1][1]+(anchors[i][1]-anchors[i+1][1])*ratio);
+        break;
+      }
+    }
+  }
+  rank=Math.max(1,Math.min(520,rank));
+  if(final)return rank;
+  // 平时考试惯性：30%旧排名 + 70%新排名
+  // 当新排名和旧排名差距大时（说明变化剧烈），进一步降低惯性
+  var gap=Math.abs(rank-G.rank);
+  var inertia=gap>100?0.1:gap>50?0.2:0.3;
+  var blended=Math.round(rank*(1-inertia)+G.rank*inertia);
+  return Math.max(1,Math.min(520,blended));
+}
+function normCDF(x){var a1=.254829592,a2=-.284496736,a3=1.421413741,a4=-1.453152027,a5=1.061405429,p=.3275911;var s=x<0?-1:1;x=Math.abs(x)/Math.sqrt(2);var t=1/(1+p*x);var y=1-(((((a5*t+a4)*t)+a3)*t+a2)*t+a1)*t*Math.exp(-x*x);return .5*(1+s*y);}
+
+function showVol(){
+  G.phase='vol';G.vol=[];var sc=calcScore();var gc=document.getElementById('gcont');
+  var h='<div class="mt">📮 "填志愿：人生第一次赌博"</div><div class="ms">你爸说填深中，你妈说求稳，'+cm()+'说"我们填一样的！"</div><div style="text-align:center;margin:6px 0;font-size:13px;color:#4ecdc4">预估 ~'+sc.total+' 分（选3个志愿）</div><div class="vgrid">';
+  for(var i=0;i<VOL_SCHOOLS.length;i++){var s=VOL_SCHOOLS[i];var tag=sc.total>=s.l+20?'🟢 稳':sc.total>=s.l-20?'🟡 搏':'🔴 冲';h+='<div class="vc" data-i="'+i+'" onclick="window._g.togV('+i+')"><div class="vn">'+s.n+'</div><div class="vl">~'+s.l+'分 | '+tag+'</div></div>';}
+  h+='</div>';gc.innerHTML=h;showBar(true,'确认志愿');
+}
+function togV(i){
+  var idx=G.vol.indexOf(i);if(idx>=0)G.vol.splice(idx,1);else if(G.vol.length<3)G.vol.push(i);
+  var cards=document.querySelectorAll('.vc');for(var j=0;j<cards.length;j++)cards[j].classList.remove('sel');
+  for(var j=0;j<G.vol.length;j++){var el=document.querySelector('.vc[data-i="'+G.vol[j]+'"]');if(el)el.classList.add('sel');}
+}
+function confirmVol(){if(G.vol.length<1)return;document.getElementById('cbtn').onclick=function(){window._g.onConfirm();};endRound();}
+
+function showFinal(){
+  // 中考最终算分——只算一次，排名直接按分数算（不带惯性）
+  var sc=calcScore();
+  G.rank=estR(sc.total,true);
+  G._finalScore=sc;
+
+  // 先检查彩蛋结局
+  for(var bi=0;bi<BONUS.length;bi++){
+    if(BONUS[bi].cond(G)){showEnd(BONUS[bi]);return;}
+  }
+
+  // 根据分数直接确定结局，不再有随机录取
+  var ending=null;
+  for(var i=0;i<ENDINGS.length;i++){
+    if(sc.total>=ENDINGS[i].min){ending=ENDINGS[i];break;}
+  }
+  if(!ending)ending=ENDINGS[ENDINGS.length-1];
+  showEnd(ending);
+}
+
+function showEnd(ending){
+  var sc=G._finalScore;
+  if(musicPlaying)playEndMusic();
+  show('S3');
+  document.getElementById('e-emoji').textContent=ending.em;
+  document.getElementById('e-title').textContent=ending.t;
+  document.getElementById('e-quote').textContent=ending.q;
+  document.getElementById('e-admit').textContent=ending.admit;
+  document.getElementById('e-scores').innerHTML=
+    '<div class="esr est"><span>📊 总分</span><span>'+sc.total+'/630</span></div>'+
+    '<div class="esr" style="margin-top:6px"><span>🏅 全校</span><span>第'+G.rank+'名/520</span></div>';
+}
+
+function endRound(){G.rd++;if(G.rd>=10){showFinal();return;}updUI();startRound();}
+
+function updUI(){
+  var r=ROUNDS[G.rd]||ROUNDS[9];
+  document.getElementById('g-month').textContent='R'+(G.rd+1)+' · '+r.m;
+  document.getElementById('g-countdown').textContent='距中考 '+r.days+'天';
+  document.getElementById('g-money').textContent='💰 '+G.money;
+  var pct=Math.round((1-G.rank/520)*100);
+  document.getElementById('rank-fill').style.width=pct+'%';
+  document.getElementById('rank-text').textContent='🏅 第'+G.rank+'名 / 520人';
+  var diff=G.prevRank-G.rank;var arrow='';
+  if(diff>0)arrow='📈 上升'+diff+'名';else if(diff<0)arrow='📉 下降'+(-diff)+'名';
+  document.getElementById('rank-arrow').textContent=arrow;
+}
+
+window._g={rollIntro:rollIntro,startGame:startGame,onConfirm:onConfirm,toggleAct:toggleAct,togV:togV,chooseEvt:chooseEvt,toggleMusic:toggleMusic};
+initStars();
+})();
+</script>
+</body>
+</html>
