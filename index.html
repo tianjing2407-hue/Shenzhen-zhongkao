@@ -186,24 +186,37 @@ function playNote(freq,start,dur,type,vol,detune){
   return osc;
 }
 
-// 主界面BGM - G大调，明亮轻快，校园清晨的感觉
+// 主界面BGM - 两只老虎 8-bit像素风版
 function playMenuMusic(){
   if(currentTrack==='menu')return;
   stopMusic();currentTrack='menu';musicPlaying=true;
   document.getElementById('music-btn').textContent='🔊';
-  var mel=[392,440,494,523,494,440,392,330,294,330,392,440,494,523,587,523];
-  var bas=[196,196,247,247,262,262,196,196,147,165,196,220,247,262,294,262];
-  var arp=[587,659,784,659,587,523,494,440,392,440,494,523,587,659,784,659];
-  var bpm=0.3;
+  // 两只老虎 C大调: do re mi do | do re mi do | mi fa sol - | mi fa sol -
+  // sol la sol fa mi do | sol la sol fa mi do | do sol(低) do - | do sol(低) do -
+  var mel=[
+    262,294,330,262, 262,294,330,262, 330,349,392,392, 330,349,392,392,
+    392,440,392,349,330,262, 392,440,392,349,330,262, 262,196,262,262, 262,196,262,262
+  ];
+  var dur=[
+    .3,.3,.3,.3, .3,.3,.3,.3, .3,.3,.5,.1, .3,.3,.5,.1,
+    .2,.2,.2,.2,.3,.3, .2,.2,.2,.2,.3,.3, .3,.3,.5,.1, .3,.3,.5,.1
+  ];
+  var bas=[
+    131,131,165,131, 131,131,165,131, 165,175,196,196, 165,175,196,196,
+    196,220,196,175,165,131, 196,220,196,175,165,131, 131,98,131,131, 131,98,131,131
+  ];
+  var bpm=0.28;
   function loop(){
     if(currentTrack!=='menu')return;
+    var t=0;
     for(var i=0;i<mel.length;i++){
-      playNote(mel[i],i*bpm,bpm*0.8,'square',0.035);
-      playNote(bas[i],i*bpm,bpm*0.9,'triangle',0.04);
-      if(i%2===0)playNote(arp[i],i*bpm,bpm*0.5,'sine',0.018);
-      if(i%4===0)playNote(mel[i]*0.5,i*bpm,bpm*2,'triangle',0.02);
+      var d=dur[i]*bpm/.3;
+      playNote(mel[i],t,d*0.85,'square',0.035);
+      playNote(bas[i],t,d*0.9,'triangle',0.04);
+      if(i%4===0)playNote(mel[i]*2,t,d*0.4,'sine',0.015);
+      t+=d;
     }
-    setTimeout(loop,mel.length*bpm*1000);
+    setTimeout(loop,t*1000+200);
   }
   loop();
 }
