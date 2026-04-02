@@ -129,7 +129,12 @@ body{background:#1a1a2e;color:#e0e0e0;font-family:'Courier New','Microsoft YaHei
 (function(){
 "use strict";
 var CL=['许晓晴','徐艺洲','蓝昊','耿邦粟','高进程'];
-function cm(){return CL[Math.floor(Math.random()*CL.length)];}
+var _clUsed=[];
+function cm(){
+  if(!_clUsed.length)_clUsed=CL.slice();
+  var i=Math.floor(Math.random()*_clUsed.length);
+  return _clUsed.splice(i,1)[0];
+}
 function R(){return Math.random();}
 function rI(a,b){return Math.floor(R()*(b-a+1))+a;}
 function cl(v,mn,mx){if(mn===undefined)mn=0;if(mx===undefined)mx=100;return Math.max(mn,Math.min(mx,Math.round(v)));}
@@ -181,70 +186,73 @@ function playNote(freq,start,dur,type,vol,detune){
   return osc;
 }
 
-// 主界面BGM - 轻松像素风，温暖循环
+// 主界面BGM - G大调，明亮轻快，校园清晨的感觉
 function playMenuMusic(){
   if(currentTrack==='menu')return;
   stopMusic();currentTrack='menu';musicPlaying=true;
   document.getElementById('music-btn').textContent='🔊';
-  // C大调温暖旋律
-  var melody=[262,294,330,349,330,294,262,247,262,294,330,392,349,330,294,262];
-  var bass=[131,131,165,165,175,175,131,131,131,131,165,165,175,175,131,131];
-  var bpm=0.32;
-  function loopMenu(){
+  var mel=[392,440,494,523,494,440,392,330,294,330,392,440,494,523,587,523];
+  var bas=[196,196,247,247,262,262,196,196,147,165,196,220,247,262,294,262];
+  var arp=[587,659,784,659,587,523,494,440,392,440,494,523,587,659,784,659];
+  var bpm=0.3;
+  function loop(){
     if(currentTrack!=='menu')return;
-    for(var i=0;i<melody.length;i++){
-      playNote(melody[i],i*bpm,bpm*0.85,'square',0.04);
-      playNote(bass[i],i*bpm,bpm*0.9,'triangle',0.05);
-      // 和弦点缀
-      if(i%4===0)playNote(melody[i]*1.5,i*bpm,bpm*2,'sine',0.02);
+    for(var i=0;i<mel.length;i++){
+      playNote(mel[i],i*bpm,bpm*0.8,'square',0.035);
+      playNote(bas[i],i*bpm,bpm*0.9,'triangle',0.04);
+      if(i%2===0)playNote(arp[i],i*bpm,bpm*0.5,'sine',0.018);
+      if(i%4===0)playNote(mel[i]*0.5,i*bpm,bpm*2,'triangle',0.02);
     }
-    setTimeout(loopMenu,melody.length*bpm*1000);
+    setTimeout(loop,mel.length*bpm*1000);
   }
-  loopMenu();
+  loop();
 }
 
-// 游戏中BGM - 节奏感更强，有紧迫感
+// 游戏中BGM - D小调，带节奏感，紧张但不压抑
 function playGameMusic(){
   if(currentTrack==='game')return;
   stopMusic();currentTrack='game';musicPlaying=true;
   document.getElementById('music-btn').textContent='🔊';
-  // A小调，学习的节奏感
-  var melody=[220,262,294,330,349,330,294,262,220,247,262,330,294,262,247,220];
-  var bass=[110,110,147,147,175,175,131,131,110,110,147,147,175,175,131,110];
-  var bpm=0.28;
-  function loopGame(){
+  var mel=[294,349,330,294,262,294,349,392,440,392,349,330,294,262,247,294];
+  var bas=[147,147,165,165,131,131,175,175,220,220,175,175,147,131,124,147];
+  var bpm=0.25;
+  function loop(){
     if(currentTrack!=='game')return;
-    for(var i=0;i<melody.length;i++){
-      playNote(melody[i],i*bpm,bpm*0.75,'square',0.035);
-      playNote(bass[i],i*bpm,bpm*0.85,'triangle',0.045);
-      // 打击节奏
-      if(i%2===0)playNote(80,i*bpm,0.05,'sawtooth',0.03);
+    for(var i=0;i<mel.length;i++){
+      playNote(mel[i],i*bpm,bpm*0.7,'square',0.03);
+      playNote(bas[i],i*bpm,bpm*0.85,'triangle',0.04);
+      // 节奏鼓点
+      if(i%2===0)playNote(90,i*bpm,0.04,'sawtooth',0.025);
+      if(i%4===3)playNote(120,i*bpm,0.03,'sawtooth',0.02);
+      // 高音点缀
+      if(i%4===0)playNote(mel[i]*2,i*bpm+bpm*0.5,bpm*0.3,'sine',0.012);
     }
-    setTimeout(loopGame,melody.length*bpm*1000);
+    setTimeout(loop,mel.length*bpm*1000);
   }
-  loopGame();
+  loop();
 }
 
-// 结局BGM - 温暖感人
+// 结局BGM - 降E大调，温暖治愈，像夕阳下的校园
 function playEndMusic(){
   if(currentTrack==='end')return;
   stopMusic();currentTrack='end';musicPlaying=true;
   document.getElementById('music-btn').textContent='🔊';
-  // F大调，温暖舒缓
-  var melody=[349,392,440,523,494,440,392,349,330,349,392,440,523,587,523,440];
-  var bass=[175,175,220,220,247,247,196,196,165,175,196,220,262,262,220,175];
-  var bpm=0.45;
-  function loopEnd(){
+  var mel=[311,349,392,466,523,466,392,349,311,349,392,466,523,587,523,466];
+  var bas=[156,156,196,196,233,233,196,196,156,175,196,233,262,294,262,233];
+  var pad=[392,392,466,466,523,523,466,466,392,440,466,523,587,659,587,523];
+  var bpm=0.5;
+  function loop(){
     if(currentTrack!=='end')return;
-    for(var i=0;i<melody.length;i++){
-      playNote(melody[i],i*bpm,bpm*0.9,'sine',0.05);
-      playNote(bass[i],i*bpm,bpm*0.95,'triangle',0.04);
-      // 柔和和弦
-      if(i%2===0)playNote(melody[i]*0.75,i*bpm,bpm*1.5,'sine',0.025);
+    for(var i=0;i<mel.length;i++){
+      playNote(mel[i],i*bpm,bpm*0.9,'sine',0.04);
+      playNote(bas[i],i*bpm,bpm*0.95,'triangle',0.035);
+      // 柔和和弦垫底
+      playNote(pad[i],i*bpm,bpm*1.2,'sine',0.015);
+      if(i%4===0)playNote(mel[i]*0.5,i*bpm,bpm*2.5,'sine',0.02);
     }
-    setTimeout(loopEnd,melody.length*bpm*1000);
+    setTimeout(loop,mel.length*bpm*1000);
   }
-  loopEnd();
+  loop();
 }
 
 function toggleMusic(){
@@ -483,6 +491,7 @@ function rollIntro(){
   initAudio();
   if(musicPlaying||!currentTrack)playMenuMusic();
   initG();
+  _clUsed=[];  // 重置同学名字池
   G.family=FAMILIES[R()<.5?0:1];G.money=G.family.money;
   var roll=R()*100,acc=0,tier=null;
   for(var i=0;i<RANK_TIERS.length;i++){acc+=RANK_TIERS[i].pct;if(roll<acc){tier=RANK_TIERS[i];break;}}
